@@ -40,6 +40,24 @@ try:
 except ImportError as e:
     settings_system = None
 
+if not settings_system:
+    try:
+        import dj_redis_url
+        settings_system = 'dj_redis_url'
+    except ImportError as e:
+        settings_system = None
+
 if settings_system == 'django':
     from django.conf import settings
     import_global_module(settings, locals(), globals())
+elif settings_system == 'dj_redis_url':
+    import os
+    parsed_redis_config = dj_redis_url.parse(os.getenv("STREAM_REDIS_URL", "redis://localhost:6379/0"))
+    STREAM_REDIS_CONFIG = {
+        "default": {
+            "db": parsed_redis_config["DB"],
+            "password": parsed_redis_config["PASSWORD"],
+            "host": parsed_redis_config["HOST"],
+            "port": parsed_redis_config["PORT"],
+        }
+    }
